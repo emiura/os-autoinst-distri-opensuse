@@ -68,7 +68,7 @@ sub get_product_shortcuts {
         return (sles4sap => is_ppc64le() ? 'i' : 't') if get_var('ISO') =~ /Full/ && is_sle('15-SP5+');
         return (sles4sap => is_ppc64le() ? 'u' : 'i') if get_var('ISO') =~ /Full/;
         return (sles4sap => is_ppc64le() ? 'i' : is_quarterly_iso() ? 'p' : 't') unless get_var('ISO') =~ /Full/;
-        return (sles4sap => 'u') if is_sle('15-SP5+');
+        return (sles4sap => 'u') if is_sle('15-SP5+') && is_ppc64le();
     }
     # We got new products in SLE 15 SP1
     elsif (is_sle '15-SP1+') {
