@@ -53,7 +53,7 @@ sub run {
     # Docker image source in https://github.com/ricardobranco777/hawk_test
     # It will be eventually moved to https://github.com/ClusterLabs/hawk/e2e_test
     #my $docker_image = "registry.opensuse.org/home/rbranco/branches/opensuse/templates/images/15.4/containers/hawk_test:latest";
-    my docker_file = "http://10.163.25.118:8080/hawk_test.tar"
+    my $docker_file = "http://10.163.25.118:8080/hawk_test.tar";
 
     #assert_script_run("docker pull $docker_image", 240);
     assert_script_run "curl -s  $docker_file";
