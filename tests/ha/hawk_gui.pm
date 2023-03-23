@@ -56,8 +56,8 @@ sub run {
     my $docker_file = "http://10.163.25.118:8080/hawk_test.tar";
 
     #assert_script_run("docker pull $docker_image", 240);
-    assert_script_run "curl -s  $docker_file -o hawk_test.tar";
-    assert_script_run ("docker load -i hawk_test.tar", 600);
+    assert_script_run ("curl -s  $docker_file -o hawk_test.tar", 600);
+    assert_script_run ("docker load -i hawk_test.tar");
     #assert_script_run "docker run 8f7a0bf06b48";
 
     # Rest of the test needs to be performed on the x11 console, but with the
