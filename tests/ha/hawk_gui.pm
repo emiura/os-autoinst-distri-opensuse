@@ -56,7 +56,7 @@ sub run {
     my $docker_file = "http://10.163.25.118:8080/hawk_test.tar";
 
     #assert_script_run("docker pull $docker_image", 240);
-    assert_script_run "curl -s  $docker_file";
+    assert_script_run "curl -s  $docker_file -o hawk_test.tar";
     assert_script_run "docker load -i hawk_test.tar";
     #assert_script_run "docker run 8f7a0bf06b48";
 
