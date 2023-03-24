@@ -48,7 +48,8 @@ sub run {
     my $robot_fw_version = '3.2.2';
     my $test_repo = "/robot/tests/sles-" . get_var('VERSION');
     my $robot_tar = "robot.tar.gz";
-    my $testkit = get_var('SYS_PARAM_CHECK_TEST', "qa-css-hq.qa.suse.de/$robot_tar");
+    #my $testkit = get_var('SYS_PARAM_CHECK_TEST', "qa-css-hq.qa.suse.de/$robot_tar");
+    my $testkit = get_var('SYS_PARAM_CHECK_TEST', "hydra.qam.suse.cz:8080/$robot_tar");
     my $python_bin = is_sle('15+') ? 'python3' : 'python';
     select_serial_terminal;
 
