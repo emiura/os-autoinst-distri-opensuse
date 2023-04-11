@@ -29,6 +29,8 @@ sub run {
     my $self = shift;
     select_console 'root-console';
 
+    assert_script_run("zypper addrepo http://download.suse.de/ibs/SUSE:/Maintenance:/28453/SUSE_Updates_SLE-Product-HA_15-SP4_x86_64 upd");
+
     # precompile regexes
     my $zypper_continue = qr/^Continue\? \[y/m;
     my $zypper_migration_target = qr/\[num\/q\]/m;
