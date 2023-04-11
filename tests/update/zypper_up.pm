@@ -20,8 +20,8 @@ sub run {
     quit_packagekit;
     fully_patch_system;
     assert_script_run("rpm -q libzypp zypper");
-    assert_script_run("zypper addrepo https://download.suse.de/ibs/SUSE:/Maintenance:/28453/SUSE_Updates_SLE-Product-HA_15-SP4_x86_64/ upd");
-    assert_script_run("zypper ref; zypper -n up");
+    assert_script_run("zypper addrepo http://download.suse.de/ibs/SUSE:/Maintenance:/28453/SUSE_Updates_SLE-Product-HA_15-SP4_x86_64/ upd");
+    assert_script_run("zypper ref; zypper up");
     assert_script_run("zypper removerepo upd; zypper ref");
 
     # XXX: does this below make any sense? what if updates got
