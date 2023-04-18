@@ -28,8 +28,8 @@ sub run {
     assert_script_run("iscsiadm -m node -l");
     script_run("crm status");
     script_run("systemctl status pacemaker");
-    script_run("journalctl -u sbd");
-    script_run("journalctl -u  corosync");
+    script_run("journalctl -u --no-pager sbd");
+    script_run("journalctl -u  --no-pager corosync");
     assert_script_run("systemctl restart pacemaker");
     sleep(10);
 
