@@ -22,6 +22,12 @@ sub run {
 
     # We may execute this test after a reboot, so we need to log in
     select_console 'root-console';
+    assert_script_run("ip a s");
+    assert_script_run("ping -c 1 10.0.2.1");
+    assert_script_run("iscsiadm -m discovery -t sendtargets -p 10.0.2.1");
+    assert_script_run("iscsiadm -m node -l");
+    assert_script_run("systemctl status pacemaker");
+    assert_script_run("systemctl restart pacemaker");
 
     # Only perform clvm to lvmlockd migration if the cluster is up and has clvm resources
     assert_script_run $crm_mon_cmd;
