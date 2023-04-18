@@ -29,7 +29,9 @@ sub run {
     script_run("crm status");
     sleep(10);
     script_run("systemctl status pacemaker");
-    script_run("systemctl restart pacemaker");
+    script_run("systemctl status sbd");
+    script_run("systemctl status corosync");
+    assert_script_run("systemctl restart pacemaker");
 
     # Only perform clvm to lvmlockd migration if the cluster is up and has clvm resources
     assert_script_run $crm_mon_cmd;
