@@ -27,11 +27,11 @@ sub run {
     assert_script_run("iscsiadm -m discovery -t sendtargets -p 10.0.2.1");
     assert_script_run("iscsiadm -m node -l");
     script_run("crm status");
-    sleep(10);
     script_run("systemctl status pacemaker");
-    script_run("systemctl status sbd");
-    script_run("systemctl status corosync");
+    script_run("journalctl -u sbd");
+    script_run("journalctl -u  corosync");
     assert_script_run("systemctl restart pacemaker");
+    sleep(10);
 
     # Only perform clvm to lvmlockd migration if the cluster is up and has clvm resources
     assert_script_run $crm_mon_cmd;
