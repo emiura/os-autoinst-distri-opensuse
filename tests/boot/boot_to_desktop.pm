@@ -20,6 +20,10 @@ use version_utils qw(is_upgrade is_sles4sap is_sle);
 
 sub run {
     my ($self) = @_;
+    if (get_var('DELAYED_START')) {
+        wait_for_support_server();
+        resume_vm();
+    }
     $self->{in_boot_desktop} = 1;
     # We have tests that boot from HDD and wait for DVD boot menu's timeout, so
     # the timeout here must cover it. UEFI DVD adds some 60 seconds on top.
