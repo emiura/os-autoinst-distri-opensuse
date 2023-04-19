@@ -198,6 +198,7 @@ sub run {
     my $index = get_var('ISCSI_LUN_INDEX', 0);
 
     foreach (split(/,/, $cluster_infos)) {
+        #
         # The CLUSTER_INFOS variable for support_server also contains the number of LUN
         my ($cluster_name, $num_nodes, $num_luns) = split(/:/, $_);
 
@@ -215,6 +216,7 @@ sub run {
         # Synchronize all nodes (including  the support server)
         barrier_wait("BARRIER_HA_$cluster_name");
     }
+
 }
 
 1;
