@@ -17,6 +17,13 @@ use testapi;
 use Utils::Architectures;
 use Utils::Backends;
 use version_utils qw(is_upgrade is_sles4sap is_sle);
+use mmapi qw(api_call_2 get_job_info);
+use lockapi;
+
+sub wait_for_support_server()
+{
+    barrier_wait('SUPPORT_SERVER_READY');
+}
 
 sub run {
     my ($self) = @_;
