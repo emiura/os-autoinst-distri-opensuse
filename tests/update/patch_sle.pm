@@ -72,7 +72,7 @@ sub patching_sle {
             # Remove '-f' for reboot for poo#65226
             enter_cmd "reboot";
             reconnect_mgmt_console if is_pvm;
-            $self->wait_boot(textmode => !is_desktop_installed(), ready_time => 600, bootloader_time => 300, nologin => $nologin);
+            $self->wait_boot(textmode => !is_desktop_installed(), ready_time => 600, bootloader_time => 600, nologin => $nologin);
             # Setup again after reboot
             $self->setup_sle();
         }
