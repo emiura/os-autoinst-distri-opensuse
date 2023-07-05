@@ -15,7 +15,7 @@ use lockapi;
 use testapi;
 use bootloader_setup qw(bootmenu_default_params specific_bootmenu_params prepare_disks sync_time);
 use registration 'registration_bootloader_cmdline';
-use utils qw(type_string_slow enter_cmd_slow);
+use utils qw(type_string_slow enter_cmd_slow type_string_very_slow enter_cmd_very_slow);
 use Utils::Backends;
 use Utils::Architectures;
 use version_utils qw(is_upgrade is_sle);
@@ -127,7 +127,7 @@ sub run {
         $image_path .= ' plymouth.enable=0 ';
     }
     # Execute installation command on pxe management cmd console
-    type_string_slow ${image_path} . " ";
+    type_string_very_slow ${image_path} . " ";
     bootmenu_default_params(pxe => 1, baud_rate => '115200');
 
     if (is_ipmi && !get_var('AUTOYAST')) {
@@ -148,11 +148,11 @@ sub run {
             $cmdline .= get_var("EXTRA_PXE_CMDLINE") . ' ';
         }
 
-        type_string_slow $cmdline;
+        type_string_very_slow $cmdline;
     }
 
     if (check_var('SCC_REGISTER', 'installation') && !(check_var('VIRT_AUTOTEST', 1) && check_var('INSTALL_TO_OTHERS', 1))) {
-        type_string_slow(registration_bootloader_cmdline);
+        type_string_very_slow(registration_bootloader_cmdline);
     }
 
     specific_bootmenu_params;
@@ -160,7 +160,7 @@ sub run {
     # try to avoid blue screen issue on osd ipmi tests
     # local test passes, if validated on osd, will switch on to all ipmi tests
     if (is_ipmi && check_var('VIDEOMODE', 'text') && check_var('VIRT_AUTOTEST', 1)) {
-        type_string_slow(" vt.color=0x07 ");
+        type_string_very_slow(" vt.color=0x07 ");
     }
 
     send_key 'ret';
@@ -188,13 +188,13 @@ sub run {
                 my $image_name = eval { check_var("INSTALL_TO_OTHERS", 1) ? get_var("REPO_0_TO_INSTALL") : get_var("REPO_0") };
                 my $args = "initrd auto/openqa/repo/${image_name}/boot/${arch}/initrd";
                 $args = "initrd /mnt/openqa/repo/${image_name}/boot/${arch}/initrd" if (!is_orthos_machine);
-                type_string_slow $args;
+                type_string_very_slow $args;
                 send_key 'ret';
                 #Detect orthos-grub-boot-initrd and qa-net-grub-boot-initrd for aarch64 in orthos and openQA networks respectively
                 wait_still_screen(stilltime => 480, timeout => 485);
                 assert_screen [qw(orthos-grub-boot-initrd qa-net-grub-boot-initrd)], $ssh_vnc_wait_time;
                 $args = "boot";
-                type_string_slow $args;
+                type_string_very_slow $args;
                 send_key "ret";
                 assert_screen $ssh_vnc_tag, $ssh_vnc_wait_time;
             }
@@ -208,8 +208,8 @@ sub run {
         save_screenshot;
         # We have textmode installation via ssh and the default vnc installation so far
         if (check_var('VIDEOMODE', 'text') || check_var('VIDEOMODE', 'ssh-x')) {
-            type_string_slow('DISPLAY= ') if check_var('VIDEOMODE', 'text');
-            enter_cmd_slow("yast.ssh");
+            type_string_very_slow('DISPLAY= ') if check_var('VIDEOMODE', 'text');
+            enter_cmd_very_slow("yast.ssh");
         }
         wait_still_screen;
     }
