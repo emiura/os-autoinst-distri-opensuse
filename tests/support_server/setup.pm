@@ -169,7 +169,8 @@ sub setup_dns_server {
     # Start services
     $setup_script .= "
         netconfig update -f
-        systemctl start named; journalctl -xe
+        sleep 3600
+        systemctl start named
         systemctl status named
         systemctl restart dhcpd
     ";
