@@ -46,7 +46,7 @@ sub run {
     } else {
         my $local_conf = '/etc/rear/local.conf';
         assert_script_run("curl -f -v " . data_url('ha/rear_local.conf') . " -o $local_conf");
-        file_content_replace("$local_conf", q(%BACKUP_URL%) => $backup_url);
+        file_content_replace("$local_conf", q(%BACKUP_URL%/%ARCH%) => $backup_url);
         my $backup_rc = script_run('rear -d -D mkbackup', timeout => $timeout);
         die 'Unexpected error in mkbackup command' unless defined $backup_rc;
         unless ($backup_rc == 0) {
