@@ -35,6 +35,7 @@ sub run {
     my $timeout = bmwqemu::scale_timeout(3600);
     my $sid = get_required_var('INSTANCE_SID');
     my $instid = get_required_var('INSTANCE_ID');
+    
 
     select_serial_terminal;
 
@@ -58,6 +59,9 @@ sub run {
     # in SLE15SP5 and above wizard is called "bone-installation-wizard"
     my $wiz_name = (is_sle('15-SP5+') and get_var('BONE')) ? "bone-installation-wizard" : "sap-installation-wizard";
     my $wizard_package_version = script_output("rpm -q --qf '%{VERSION}\n' $wiz_name");
+
+    # initial workaround for 15-SP7 and b1 installer 2502
+    $self->b1_workaround_os_version;
 
     # start wizard
     if (check_var('DESKTOP', 'textmode')) {
