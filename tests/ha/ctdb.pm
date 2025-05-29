@@ -22,6 +22,11 @@ sub run {
     # Exit of this module if we are in a maintenance update not related to samba
     return 1 if is_not_maintenance_update('samba');
 
+    # sle16 ha pattern does not include samba or ctdb
+    if (is_sle('16+')) {
+        zypper_call 'in ctdb samba';
+    }
+
     select_serial_terminal;
 
     my $cluster_name = get_cluster_name;
@@ -67,6 +72,9 @@ sub run {
 
         # Get smb conf file from the openQA server
         assert_script_run "curl -f -v " . autoinst_url . "/data/ha/smb.conf -o $ctdb_cfg";
+        if (is_sle('16+')) {
+            file_content_replace("/etc/sysconfig/ctdb", "CTDB_SOCKET" => "$ctdb_socket");
+        }
         file_content_replace("$ctdb_cfg", "%CTDB_SOCKET%" => "$ctdb_socket");
 
         if (is_node(1)) {
