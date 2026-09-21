@@ -15,6 +15,8 @@
   <li><a href="#SYNOPSIS">SYNOPSIS</a>
     <ul>
       <li><a href="#Global-Variables">Global Variables</a></li>
+      <li><a href="#sync_file">sync_file</a></li>
+      <li><a href="#sync_path">sync_path</a></li>
       <li><a href="#exec_csync">exec_csync</a></li>
       <li><a href="#add_file_in_csync">add_file_in_csync</a></li>
       <li><a href="#get_cluster_info">get_cluster_info</a></li>
@@ -73,6 +75,17 @@
       <li><a href="#crm_resource_locate">crm_resource_locate</a></li>
       <li><a href="#crm_resource_meta_show">crm_resource_meta_show</a></li>
       <li><a href="#crm_resource_meta_set">crm_resource_meta_set</a></li>
+      <li><a href="#crm_list_options">crm_list_options</a></li>
+      <li><a href="#get_sbd_devices">get_sbd_devices</a></li>
+      <li><a href="#parse_sbd_metadata">parse_sbd_metadata</a></li>
+      <li><a href="#list_configured_sbd">list_configured_sbd</a></li>
+      <li><a href="#sbd_device_report">sbd_device_report</a></li>
+      <li><a href="#get_fencing_type">get_fencing_type</a></li>
+      <li><a href="#check_crm_nonroot">check_crm_nonroot</a></li>
+      <li><a href="#get_crmsh_version">get_crmsh_version</a></li>
+      <li><a href="#get_fencing_ra_name">get_fencing_ra_name</a></li>
+      <li><a href="#pcmk_delay_max_cmd">pcmk_delay_max_cmd</a></li>
+      <li><a href="#get_bootstrap_properties">get_bootstrap_properties</a></li>
     </ul>
   </li>
 </ul><h1>lib/hacluster.pm</h1>
@@ -109,10 +122,23 @@
 <li><p><b>$sbd_delay_start</b>: command to extract the value of <code>SBD_DELAY_START</code> from <code>/etc/sysconfig/sbd</code></p>
 
 </li>
-<li><p><b>$pcmk_delay_max</b>: command to get the value of the <code>pcmd_delay_max</code> parameter from the STONITH resource in the cluster configuration.</p>
+<li><p><b>$crm_config_show_fence_sbd</b>: command to extract the part of the cluster configuration relating to <b>fence_sbd</b></p>
 
 </li>
 </ul>
+
+<h2 id="sync_file">sync_file</h2>
+
+<pre><code>sync_file(&#39;/path/to/file&#39;);</code></pre>
+
+<p>Wrapper function to synchronize a specific file to all nodes in the cluster based on the OS version. It will call <code>crm cluster copy</code> in SLES 16 or newer, and <code>add_file_in_csync</code> which internally calls <code>exec_csync</code> in versions older than 16.</p>
+
+<h2 id="sync_path">sync_path</h2>
+
+<pre><code>sync_path(&#39;/path/to/dir&#39;);
+sync_path(&#39;/path/to/files*&#39;);</code></pre>
+
+<p>Function to syncronize a list of files or a directory to all nodes in the cluster based on the OS version. It will use <code>add_file_in_csync</code> which internally calls <code>exec_csync</code> when the OS is older than 16.0; on newer, it will call <code>crm cluster copy</code> for all files matching the given path after expanding any shell wildcards and recursing into any directories.</p>
 
 <h2 id="exec_csync">exec_csync</h2>
 
@@ -535,6 +561,8 @@
 
 <p>Some HA tests modules will cause a node to fence. In these cases, the tests will need to assert a <b>grub2</b> or <b>bootmenu</b> screen, so the modules will need to select the <code>root-console</code> before any calls to <code>assert_screen</code>. On some systems, a simple call to <code>select_console &#39;root-console&#39;</code> will not work as the console could be &quot;dirty&quot; with messages obscuring the root prompt. This function will pre-select the console without asserting anything on the screen, clear it, and then select it normally.</p>
 
+<p>On PVM setup, serial connection may lose if jobs running too long from ssh termial, so re-connect it after switching back to root-console</p>
+
 <h2 id="crm_get_failcount">crm_get_failcount</h2>
 
 <pre><code>crm_get_failcount(crm_resource=&gt;&#39;ASCS_00&#39; [, assert_result=&gt;&#39;true&#39;]);</code></pre>
@@ -630,6 +658,212 @@
 
 </li>
 </ul>
+
+<h2 id="crm_list_options">crm_list_options</h2>
+
+<pre><code>my $ret = crm_list_options();</code></pre>
+
+<p>Executes a series of <code>crm</code> commands to list metadata options for different resource types (primitive, fencing, cluster attributes) and validates that their XML output is well-formed. This function is designed to test a new feature in <code>crmsh</code> version 5.0.0 and newer, which provides a CLI interface to query resource meta-attributes.</p>
+
+<p>The function will execute the following commands:</p>
+
+<ul>
+
+<li><p><code>crm_resource --list-options primitive --output-as xml</code></p>
+
+</li>
+<li><p><code>crm_resource --list-options fencing --output-as xml</code></p>
+
+</li>
+<li><p><code>crm_attribute --list-options cluster --all --output-as=xml</code></p>
+
+</li>
+</ul>
+
+<p><b>Return values:</b></p>
+
+<ul>
+
+<li><p><b>1</b>: All commands executed successfully and their XML output was valid.</p>
+
+</li>
+<li><p><b>0</b>: The installed <code>crmsh</code> version is older than 5.0.0. The function performs no operation.</p>
+
+</li>
+<li><p><b>-1</b>: At least one of the commands produced output that was not valid XML.</p>
+
+</li>
+</ul>
+
+<h2 id="get_sbd_devices">get_sbd_devices</h2>
+
+<pre><code>my @ret = get_sbd_devices($hostname);</code></pre>
+
+<p>Executes &#39;crm sbd status&#39; to get sbd configuration, and return the devices information for the specify node.</p>
+
+<p>Following is the result of `crm sbd status`, we will check if there are two device on each node. status of sdb.service:</p>
+
+<p>Node |Active |Enable |Since 2nodes-node01: |YES |YES | active since: Tue 2025-07-22 09:45:21 2nodes-node02: |YES |YES | active since: Tue 2025-07-22 09:45:21</p>
+
+<p># Status of the sbd disk watcher process on 2nodes-node01: |-3059 sbd: watcher: /dev/disk/by-path/xxxxxxx - slot : 0 --uuid xxxx |-3060 sbd: watcher: /dev/disk/by-path/xxxxxxx - slot : 0 --uuid xxxx</p>
+
+<p># Status of the sbd disk watcher process on 2nodes-node02: |-3058 sbd: watcher: /dev/disk/by-path/xxxxxxx - slot : 0 --uuid xxxx |-3061 sbd: watcher: /dev/disk/by-path/xxxxxxx - slot : 0 --uuid xxxx</p>
+
+<p># Watchdog info: Node. |Device |Driver |Kernel Timeout 2nodes-node01 |/dev/watchdog. | &lt;unknown&gt; | 10 2nodes-node02 |/dev/watchdog. | &lt;unknown&gt; | 10</p>
+
+<dl>
+
+<dt id="Parameters"><b>Parameters:</b></dt>
+<dd>
+
+<dl>
+
+<dt id="hostname"><code>$hostname</code></dt>
+<dd>
+
+<p>String. The name of the node to query.</p>
+
+</dd>
+</dl>
+
+</dd>
+<dt id="Return-values"><b>Return values:</b></dt>
+<dd>
+
+<p>Array. List of SBD devices, e.g. (sbd_device1, sbd_device2)</p>
+
+</dd>
+</dl>
+
+<h2 id="parse_sbd_metadata">parse_sbd_metadata</h2>
+
+<pre><code>my @ret = parse_sbd_metadata;</code></pre>
+
+<p>Executes &#39;crm sbd configure show disk_metadata&#39; to get sbd information, and return the devices and metadata value.</p>
+
+<p>Following is the result of `crm sbd configure show disk_metadata`, we will check if there are two device on each node. INFO: crm sbd configure show disk_metadata ==Dumping header on disk /dev/disk/by-path/xxxxx Header version : 2.1 UUID : xxx Number of slots : 255 Sector size : 512 Timeout (watchdog) : 5 Timeout (allocate) : 10 Timeout (loop) : 2 Timeout (msgwait) : 5 ==Header on disk /dev/disk/by-path/xxxxxxx is dumped</p>
+
+<p># If there is a second sbd device ==Dumping header on disk /dev/disk/by-path/xxxxx Header version : 2.1 UUID : xxx Number of slots : 255 Sector size : 512 Timeout (watchdog) : 5 Timeout (allocate) : 10 Timeout (loop) : 2 Timeout (msgwait) : 5 ==Header on disk /dev/disk/by-path/xxxxxxx is dumped</p>
+
+<dl>
+
+<dt id="Return-values1"><b>Return values:</b></dt>
+<dd>
+
+<pre><code>(
+       {
+         &#39;metadata&#39; =&gt; {
+                         &#39;allocate&#39; =&gt; &#39;10&#39;,
+                         &#39;loop&#39; =&gt; &#39;2&#39;,
+                         &#39;msgwait&#39; =&gt; &#39;5&#39;,
+                         &#39;watchdog&#39; =&gt; &#39;5&#39;
+                       },
+         &#39;device_name&#39; =&gt; &#39;/dev/disk/by-path/xxxxx&#39;
+       },
+       {
+         &#39;device_name&#39; =&gt; &#39;/dev/disk/by-path/xxxxx&#39;,
+         &#39;metadata&#39; =&gt; {
+                         &#39;allocate&#39; =&gt; &#39;10&#39;,
+                         &#39;loop&#39; =&gt; &#39;2&#39;,
+                         &#39;msgwait&#39; =&gt; &#39;5&#39;,
+                         &#39;watchdog&#39; =&gt; &#39;5&#39;
+                       }
+       }
+     ])</code></pre>
+
+</dd>
+</dl>
+
+<h2 id="list_configured_sbd">list_configured_sbd</h2>
+
+<pre><code>list_configured_sbd();</code></pre>
+
+<p>Returns list of SBD devices defined in `/etc/sysconfig/sbd` as an <b>ARRAYREF</b>. Example: [&#39;/device/1&#39;, &#39;/device/2&#39;]</p>
+
+<h2 id="sbd_device_report">sbd_device_report</h2>
+
+<pre><code>sbd_device_report(device_list=&gt;[&#39;/device/one&#39;, &#39;/device/two&#39;]);</code></pre>
+
+<p>Executes various SBD related commands and returns report compiled from the outputs as a single string.</p>
+
+<ul>
+
+<li><p><b>device_list</b> List of devices as an <b>ARRAYREF</b> that should be included in the report.</p>
+
+</li>
+<li><p><b>expected_sbd_devices_count</b> Optional check if number of expected SBD devices deployed matches current state.</p>
+
+</li>
+</ul>
+
+<h2 id="get_fencing_type">get_fencing_type</h2>
+
+<pre><code>get_fencing_type();</code></pre>
+
+<p>Checks which stonith resource type is configured using <b>crm shell</b>. Returns full type name (&#39;external/sbd&#39;, &#39;fence_azure_arm&#39;, ...).</p>
+
+<h2 id="check_crm_nonroot">check_crm_nonroot</h2>
+
+<pre><code>check_crm_nonroot();</code></pre>
+
+<p>Checks if non-root user run &#39;crm configure show&#39; successfully</p>
+
+<ul>
+
+<li><p><b>user</b> non-root user, usually be &lt;sid&gt;adm</p>
+
+</li>
+</ul>
+
+<h2 id="get_crmsh_version">get_crmsh_version</h2>
+
+<pre><code>get_crmsh_version();</code></pre>
+
+<p>Gets the <b>crmsh</b> package version from the SUT.</p>
+
+<h2 id="get_fencing_ra_name">get_fencing_ra_name</h2>
+
+<pre><code>get_fencing_ra_name($crm_config_output);</code></pre>
+
+<p>Gets the correct name of the <b>fence_sbd</b> primitive from a snippet of the cluster configuration provided as an argument, such as the output of the command stored in <code>$crm_config_show_fence_sbd</code>.</p>
+
+<h2 id="pcmk_delay_max_cmd">pcmk_delay_max_cmd</h2>
+
+<pre><code>pcmk_delay_max_cmd();
+pcmk_delay_max_cmd($primitive_name);</code></pre>
+
+<p>Returns the command required to get the value of the attribute <code>pcmk_delay_max</code> in the cluster configuration. If no argument is provided, it will try to determine the correct name for the <b>fence_sbd</b> primitive using <code>get_fencing_ra_name</code>, otherwise it will use whatever primitive name is provided as an argument.</p>
+
+<h2 id="get_bootstrap_properties">get_bootstrap_properties</h2>
+
+<pre><code>get_bootstrap_properties()</code></pre>
+
+<p>Runs <code>crm -D plain configure show cib-bootstrap-options</code> in the System Under Test and parses the output into a Perl HASH.</p>
+
+<p>For example, an output like:</p>
+
+<pre><code>property cib-bootstrap-options: \
+    dc-version=&quot;1.2.3.4&quot; \
+    cluster-infrastructure=corosync \
+    have-watchdog=true \
+    cluster-name=hacluster \
+    stonith-enabled=true \
+    stonith-timeout=71 \
+    priority-fencing-delay=60 \
+    last-lrm-refresh=1777299458&#39;;</code></pre>
+
+<p>Would produce a HASH like:</p>
+
+<pre><code>$VAR1 = {
+      &#39;dc-version&#39; =&gt; &#39;&quot;1.2.3.4&quot;&#39;,
+      &#39;cluster-infrastructure&#39; =&gt; &#39;corosync&#39;,
+      &#39;stonith-enabled&#39; =&gt; &#39;true&#39;,
+      &#39;last-lrm-refresh&#39; =&gt; &#39;1777299458&#39;,
+      &#39;stonith-timeout&#39; =&gt; &#39;71&#39;,
+      &#39;cluster-name&#39; =&gt; &#39;hacluster&#39;,
+      &#39;priority-fencing-delay&#39; =&gt; &#39;60&#39;,
+      &#39;have-watchdog&#39; =&gt; &#39;true&#39;
+    };</code></pre>
 
 
 </body>

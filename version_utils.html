@@ -29,6 +29,7 @@
       <li><a href="#is_sle_micro">is_sle_micro</a></li>
       <li><a href="#is_micro">is_micro</a></li>
       <li><a href="#is_alp">is_alp</a></li>
+      <li><a href="#is_aeon">is_aeon</a></li>
       <li><a href="#is_selfinstall">is_selfinstall</a></li>
       <li><a href="#is_tumbleweed">is_tumbleweed</a></li>
       <li><a href="#is_slowroll">is_slowroll</a></li>
@@ -42,6 +43,8 @@
       <li><a href="#is_sles4sap_standard">is_sles4sap_standard</a></li>
       <li><a href="#is_rt">is_rt</a></li>
       <li><a href="#is_hpc">is_hpc</a></li>
+      <li><a href="#is_wsl">is_wsl</a></li>
+      <li><a href="#is_dualboot">is_dualboot</a></li>
       <li><a href="#is_released">is_released</a></li>
       <li><a href="#is_staging">is_staging</a></li>
       <li><a href="#is_storage_ng">is_storage_ng</a></li>
@@ -65,9 +68,9 @@
       <li><a href="#check_os_release">check_os_release</a></li>
       <li><a href="#verify_os_version">verify_os_version</a></li>
       <li><a href="#is_public_cloud">is_public_cloud</a></li>
-      <li><a href="#is_openstack">is_openstack</a></li>
       <li><a href="#is_leap_migration">is_leap_migration</a></li>
       <li><a href="#is_tunneled">is_tunneled</a></li>
+      <li><a href="#is_community_jeos">is_community_jeos</a></li>
       <li><a href="#is_bootloader_grub2">is_bootloader_grub2</a></li>
       <li><a href="#is_bootloader_sdboot">is_bootloader_sdboot</a></li>
       <li><a href="#is_bootloader_grub2_bls">is_bootloader_grub2_bls</a></li>
@@ -78,9 +81,9 @@
       <li><a href="#package_version_cmp">package_version_cmp</a></li>
       <li><a href="#is_quarterly_iso">is_quarterly_iso</a></li>
       <li><a href="#get_version_id">get_version_id</a></li>
-      <li><a href="#is_community_jeos">is_community_jeos</a></li>
       <li><a href="#has_selinux_by_default">has_selinux_by_default</a></li>
       <li><a href="#is_agama">is_agama</a></li>
+      <li><a href="#is_ltss">is_ltss</a></li>
     </ul>
   </li>
 </ul><h1>lib/version_utils.pm</h1>
@@ -147,6 +150,10 @@
 
 <p>Check if distribution is ALP</p>
 
+<h2 id="is_aeon">is_aeon</h2>
+
+<p>Check if distribution is Aeon</p>
+
 <h2 id="is_selfinstall">is_selfinstall</h2>
 
 <p>Check if SLEM is in flavor of self installable iso</p>
@@ -199,13 +206,21 @@
 
 <p>Returns true if called in an HPC test</p>
 
+<h2 id="is_wsl">is_wsl</h2>
+
+<p>Returns true if called on a wsl build, which is identified by its flavor.</p>
+
+<h2 id="is_dualboot">is_dualboot</h2>
+
+<p>Returns true if called on a dual boot test</p>
+
 <h2 id="is_released">is_released</h2>
 
 <p>Returns true if called on a released build</p>
 
 <h2 id="is_staging">is_staging</h2>
 
-<p>Returns true if called in staging</p>
+<p>Returns true if called in staging, checks for a particular staging if argument is passed</p>
 
 <h2 id="is_storage_ng">is_storage_ng</h2>
 
@@ -289,7 +304,7 @@
 
 <h2 id="get_os_release">get_os_release</h2>
 
-<p>Get SLE release version, service pack and distribution name info from any running sles os without any dependencies It parses the info from /etc/os-release file, which can reside in any physical host or virtual machine The file can also be placed anywhere as long as it can be reached somehow by its absolute file path, which should be passed in as the second argument os_release_file, for example, &quot;/etc/os-release&quot; At the same time, connection method to the entity in which the file reside should be passed in as the first argument go_to_target, for example, &quot;ssh root at name or ip address&quot; or &quot;way to download the file&quot; For use only on locahost, no argument needs to be specified</p>
+<p>Get SLE release version, service pack, distribution name and ID_LIKE info from any running sles os without any dependencies It parses the info from /etc/os-release file, which can reside in any physical host or virtual machine The file can also be placed anywhere as long as it can be reached somehow by its absolute file path, which should be passed in as the second argument os_release_file, for example, &quot;/etc/os-release&quot; At the same time, connection method to the entity in which the file reside should be passed in as the first argument go_to_target, for example, &quot;ssh root at name or ip address&quot; or &quot;way to download the file&quot; For use only on locahost, no argument needs to be specified The 4th return value (ID_LIKE) is useful to detect e.g. sle-micro, which since the SLE 16 unified base reports ID=&quot;sles&quot; and only differentiates itself via ID_LIKE containing &quot;sle-micro&quot;/&quot;microos&quot;</p>
 
 <h2 id="check_os_release">check_os_release</h2>
 
@@ -325,10 +340,6 @@
 
 <p>Returns true if PUBLIC_CLOUD is set to 1</p>
 
-<h2 id="is_openstack">is_openstack</h2>
-
-<p>Returns true if the tests loads Cloud image in OpenStack environment NO_CLOUD variable is set in order to test the image in QEMU</p>
-
 <h2 id="is_leap_migration">is_leap_migration</h2>
 
 <p>Returns true if called in a leap to sle migration scenario</p>
@@ -336,6 +347,10 @@
 <h2 id="is_tunneled">is_tunneled</h2>
 
 <p>Returns true if TUNNELED is set to 1</p>
+
+<h2 id="is_community_jeos">is_community_jeos</h2>
+
+<p>Returns true for tests using the images built by the &quot;JeOS&quot; package on OBS</p>
 
 <h2 id="is_bootloader_grub2">is_bootloader_grub2</h2>
 
@@ -381,10 +396,6 @@
 
 <p>The default location that contains VERSION_ID is file /etc/os-release if nothing else is passed in to argument verid_file.</p>
 
-<h2 id="is_community_jeos">is_community_jeos</h2>
-
-<p>Returns true for tests using the images built by the &quot;JeOS&quot; package on OBS</p>
-
 <h2 id="has_selinux_by_default">has_selinux_by_default</h2>
 
 <p>Returns true if the distro has SELinux as default MAC</p>
@@ -392,6 +403,10 @@
 <h2 id="is_agama">is_agama</h2>
 
 <p>Check if agama installation is being used</p>
+
+<h2 id="is_ltss">is_ltss</h2>
+
+<p>Returns true if the system is running on LTSS (Long Term Service Support)</p>
 
 
 </body>
